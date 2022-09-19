@@ -1,0 +1,200 @@
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{listings}
+\usetikzlibrary{shapes,snakes}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{shadows.blur}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{svg}
+\usepackage{siunitx}
+\usepackage{pgfplots, pgfplotstable}
+\usepackage{filecontents}
+\usepackage[outputdir=../out]{minted}
+\usepackage{makecell}
+\usepackage{pifont}
+\usepackage{ulem}
+
+%\newcommand{\code}[1]{#1}
+
+\newcommand{\op}[1]{\operatorname{#1}}
+
+\definecolor{ideakeyword}{RGB}{0,0,128}
+\definecolor{ideanumber}{RGB}{0,0,255}
+\definecolor{ideamember}{RGB}{102,14,122}
+
+\definecolor{googleblue}{RGB}{66,133,244}
+\definecolor{googlered}{HTML}{db4437}
+\definecolor{googleyellow}{HTML}{f4b400}
+
+\definecolor{haiblue}{HTML}{268BD2}
+\definecolor{haired}{HTML}{D13D3B}
+\definecolor{haiyellow}{HTML}{D1D111}
+\definecolor{haigreen}{HTML}{3BD16A}
+\definecolor{gray42}{HTML}{424242}
+
+
+\definecolor{huaweired}{RGB}{196,21,28}
+\colorlet{red}{huaweired}
+
+\definecolor{green}{HTML}{2AA158}
+
+\definecolor{javablue}{RGB}{0,115,150}
+\definecolor{javaorange}{RGB}{237,139,0}
+
+\colorlet{maincolor}{haiblue}
+
+\usepackage{lstautogobble}
+\lstset{
+  language=C,
+  tabsize=4,
+  keywordstyle=\bfseries\color{maincolor!50!black},
+  numberstyle=\tiny\color{ideanumber},
+  commentstyle=\color{gray},
+  stringstyle=\color{green},
+  morekeywords={is,type,stackallocated,onStack,assert},
+  %
+  %xleftmargin=0.03\textwidth,
+  %aboveskip=0.75\medskipamount,
+  %belowskip=0.5\medskipamount,
+  %
+  basicstyle=\ttfamily\small,
+  %keywordstyle=\color{codeKeyword},
+  %stringstyle=\color{codeString},
+  %commentstyle=\color{codeComment},
+  %
+  literate={-}{-}1, % render dash as dash
+  showstringspaces=false,
+  %
+  autogobble
+}
+
+\usemintedstyle{hai}
+\setminted{autogobble}
+\setminted{beameroverlays}
+\setminted{escapeinside=||}
+\setminted{xleftmargin=0.5cm}
+% \setminted{fontsize=\small}
+
+\newcommand{\code}[2][]{\mintinline[#1]{c++}{#2}}
+
+\newcommand{\hl}[1]{{\color{javaorange}#1}}
+\newcommand{\hlit}[1]{\textit{\hl{#1}}}
+\newcommand{\hlbf}[1]{\textbf{\hl{#1}}}
+
+% https://tex.stackexchange.com/a/74469
+\newcommand{\reducedstrut}{\vrule width 0pt height .9\ht\strutbox depth .9\dp\strutbox\relax}
+\newcommand{\colorboxnosp}[2]{%
+  \begingroup
+  \setlength{\fboxsep}{0pt}%
+  \colorbox{#1}{\reducedstrut#2\/}%
+  \endgroup
+}
+\newcommand{\hlc}[1]{\colorboxnosp{haigreen}{#1}}
+\newcommand{\errc}[1]{\colorboxnosp{haired}{#1}}
+\newcommand<>{\hlco}[1]{\alt#2{\hlc{#1}}{#1}}
+\newcommand<>{\errco}[1]{\alt#2{\errc{#1}}{#1}}
+\newcommand<>{\souto}[1]{\alt#2{\sout{#1}}{#1}}
+
+\definecolor{mintedcomment}{HTML}{3D7B7B}
+\definecolor{mintedkeyword}{HTML}{0B5285}
+\definecolor{mintednumber}{HTML}{856E18}
+\newcommand<>{\blockcom}[1]{\textit{\color{mintedcomment}/* #1 */}}
+\newcommand<>{\linecom}[1]{\textit{\color{mintedcomment}// #1}}
+\newcommand<>{\keyword}[1]{{\color{mintedkeyword}#1}}
+\newcommand<>{\codenum}[1]{{\color{mintednumber}#1}}
+
+
+\newcommand{\hlm}[1]{{\color{maincolor}#1}}
+
+\tikzset{>=latex}
+%\tikzset{yscale=-1}
+
+\tikzstyle{minheight} = [minimum height=1em + 2mm, align=center]
+\tikzstyle{decision} = [diamond, draw, aspect=2]
+\tikzstyle{merge} = [regular polygon, regular polygon sides=3, draw, shape border rotate=180, yscale=0.75, xscale=2]
+\tikzstyle{spinal} = [minheight, draw]
+\tikzstyle{value} = [ellipse, draw, color=red]
+
+
+\usetheme{Boadilla}
+
+%gets rid of bottom navigation symbols
+%\setbeamertemplate{navigation symbols}{}
+\beamertemplatenavigationsymbolsempty
+
+%\useoutertheme{split}
+\useinnertheme{circles}
+
+%gets rid of bottom navigation bars
+%\setbeamertemplate{footline}[frame number]
+\setbeamertemplate{footline}[text line]{%
+  \parbox{\linewidth}{\usebeamercolor[fg]{title}\vspace*{-8pt} \hfill \insertshortauthor ~ \insertframenumber/\inserttotalframenumber}}
+\setbeamertemplate{navigation symbols}{}
+
+
+%gets rid of footer
+%will override 'frame number' instruction above
+%comment out to revert to previous/default definitions
+%\setbeamertemplate{footline}{}
+
+\setbeamertemplate{blocks}[default]
+\setbeamertemplate{frametitle}[shadow=true]
+
+\setbeamerfont{title}{size=\Huge, series=\sffamily}
+\setbeamerfont{subtitle}{size=\Large, series=\sffamily}
+\setbeamerfont{author}{size=\LARGE, series=\sffamily}
+\setbeamercolor{author}{fg=white}
+
+\setbeamertemplate{title page}{
+    \begin{beamercolorbox}[wd=\paperwidth,ht=4cm]{Title bar}
+        \begin{tikzpicture}[remember picture, overlay, framed]
+            \node[right] at (1, 5em) {\usebeamerfont{title}\usebeamercolor[fg]{title}\inserttitle};
+            %\node[right] at (1, 4.5em) {\usebeamerfont{subtitle} \usebeamercolor[fg]{subtitle} \insertsubtitle};
+            \fill[color=maincolor, blur shadow={shadow xshift=1, shadow yshift=-1, shadow blur steps=5}] (0,0) rectangle (0.80\paperwidth, 3em);
+            \node[right] at (1, 1.5em) {\usebeamerfont{author}\usebeamercolor[fg]{author}\insertsubtitle};
+            \node[right] at (1, -1.5em) {\usebeamerfont{date}\usebeamercolor[fg]{subtitle}\insertdate};
+        \end{tikzpicture}%
+    \end{beamercolorbox}
+}
+
+\setbeamerfont{frametitle}{size=\LARGE, series=\sffamily}
+
+\setbeamercolor{normal text}{bg=white,fg=black}
+\setbeamercolor{frametitle}{bg=maincolor, fg=white}
+\setbeamercolor{title}{bg=maincolor, fg=gray42}
+\setbeamercolor{structure}{bg=green, fg=maincolor}
+\setbeamercolor{item projected}{fg=white}
+
+%\setbeamercolor{block title}{bg=maincolor, fg=white}
+%\setbeamercolor{block body}{bg=maincolor!10!white}
+
+\setbeamerfont{block title}{size=\Large, series=\sffamily}
+\setbeamercolor{block title}{bg=white, fg=maincolor}
+\setbeamercolor{block body}{bg=white}
+
+\setbeamercolor{page number in head/foot}{fg=maincolor}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=huaweired,
+    filecolor=maincolor,
+    urlcolor=maincolor,
+}
+
+\newcommand{\fullscreenlabel}[1]{
+    \begin{frame}[plain]
+        \begin{beamercolorbox}[wd=\paperwidth,ht=4cm]{Title bar}
+            \begin{tikzpicture}[remember picture, overlay, framed]
+                \fill[color=maincolor, blur shadow={shadow xshift=1, shadow yshift=-1, shadow blur steps=5}] (0,0) rectangle (0.75\paperwidth, 5em);
+                \node[right] at (1, 2.5em) {\usebeamercolor[fg]{author}#1};
+            \end{tikzpicture}%
+        \end{beamercolorbox}
+    \end{frame}
+}
+
+\newcommand{\qnaframe}{\fullscreenlabel{\huge Q \& A}}

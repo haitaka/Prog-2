@@ -1,0 +1,8 @@
+\tikzset{
+  membox/.style={fill=maincolor, draw=white, thick},
+  memnode/.style={color=white, pos=0.5},
+}
+
+\newcommand{\membox}[3]{
+  \filldraw[membox] (#1) rectangle (#2) node[color=white, pos=0.5] {#3};
+}
