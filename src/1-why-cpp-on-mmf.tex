@@ -1,0 +1,1569 @@
+\documentclass[aspectratio=169,14pt]{beamer}
+\usepackage{common}
+\usepackage{boxes}
+
+\setminted{fontsize=\small}
+\newcommand{\yes}{\only<2->{\color{haigreen}\ding{51}}}
+\newcommand{\no}{\only<2->{\color{haired}\ding{55}}}
+
+\title{Программирование--2}
+\subtitle{01 | Зачем C++ математикам?}
+\author{a.glushko@g.nsu.ru}
+\date{20 сентября 2022}
+
+
+\begin{document}
+
+    \begin{frame}[fragile]
+        \titlepage
+    \end{frame}
+
+    \begin{frame}{Зачем C++ математикам?}
+        \Large
+        \begin{itemize}
+            \item DSL!
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Domain-specific languages}
+        \begin{itemize}
+            \item Языки, близкие к предметной области
+            \item Для конкретного класса задач, а не общего назначения
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{G-code}
+        \begin{block}{Язык программирования ЧПУ-станков}
+            \begin{columns}
+                \begin{column}{0.4\textwidth}
+                    \pause
+                    \begin{minted}[fontsize=\scriptsize]{text}
+                        %
+                        O200
+                        G21 G40 G49 G53 G80 G90 G17
+                        G0 F300
+                        M3 S500
+                        G4 P2000
+                        X0 Y30 Z5
+                        G1 Z-2 F40
+                        G1 F20 X10 Y0
+                        X20 Y30
+                        X30 Y0
+                        X40 Y30
+                        G0 Z5
+                        M5
+                        M30
+                    \end{minted}
+                \end{column}
+                \begin{column}{0.6\textwidth}
+                    \pause
+                    \begin{center}
+                        \includesvg[width=0.8\textwidth]{media/01/g-code-W}
+                    \end{center}
+                \end{column}
+            \end{columns}
+        \end{block}
+    \end{frame}
+
+    \begin{frame}[fragile]{Maple/Mathematica}
+        \begin{block}{{\normalsize Математические вычисления, моделирование и визуализация}}
+            \begin{columns}[T]
+                \begin{column}{0.4\textwidth}
+                    \pause
+                    \begin{minted}[fontsize=\footnotesize]{matlab}
+                        [X,Y] = meshgrid(-10:0.25:10,-10:0.25:10);
+                        f = sinc(sqrt((X/pi).^2+(Y/pi).^2));
+                        mesh(X,Y,f);
+                        axis([-10 10 -10 10 -0.3 1])
+                        xlabel('{\bfx}')
+                        ylabel('{\bfy}')
+                        zlabel('{\bfsinc} ({\bfR})')
+                        hidden off
+                    \end{minted}
+                \end{column}
+                \begin{column}{0.6\textwidth}
+                    \pause
+                    \begin{center}
+                        \tiny
+                        \includesvg[width=0.7\textwidth]{media/01/matlab}
+                    \end{center}
+                \end{column}
+            \end{columns}
+        \end{block}
+    \end{frame}
+
+    \begin{frame}[fragile]{Prolog}
+        \begin{block}{{\large Декларативный язык исчисления предикатов}}
+            \pause
+            \begin{minted}[fontsize=\footnotesize]{prolog}
+                partition([], _, [], []).
+                partition([X|Xs], Pivot, Smalls, Bigs) :-
+                    (   X @< Pivot ->
+                        Smalls = [X|Rest],
+                        partition(Xs, Pivot, Rest, Bigs)
+                    ;   Bigs = [X|Rest],
+                        partition(Xs, Pivot, Smalls, Rest)
+                    ).
+
+                quicksort([])     --> [].
+                quicksort([X|Xs]) -->
+                    { partition(Xs, X, Smaller, Bigger) },
+                    quicksort(Smaller), [X], quicksort(Bigger).
+            \end{minted}
+        \end{block}
+    \end{frame}
+
+    \begin{frame}[fragile]{\Large Языково-ориентированное программирование}
+        \begin{itemize}
+            \item Разделение задачи на подзадачи по областям знаний
+            \item Подбор или разработка DSL для областей
+            \item Решение подзадач на DSL
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Embedded DSL}
+        \begin{itemize}
+            \item Реализованы внутри другого (базового) языка программирования
+            \begin{itemize}
+                \item Возможности синтаксиса языка-носителя используются для создания DS-синтаксиса
+            \end{itemize}
+            \item Упрощается реализация и комбинирование с другими DSL в ЯОП-процессе
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Инструменты EDSL в C++}
+        \begin{columns}[T]
+            \begin{column}{0.5\textwidth}
+                \begin{onlyenv}<1>
+                    \begin{itemize}
+                        \item Перегрузка операторов
+                    \end{itemize}
+                \end{onlyenv}
+                \begin{onlyenv}<2-4>
+                    \begin{minted}[]{c++}
+                        class Vector {
+                            float * data;
+                            int size;
+                        public:
+                            Vector add(Vector that);
+                        };
+                    \end{minted}
+                \end{onlyenv}
+                \begin{onlyenv}<5>
+                    \begin{minted}[]{c++}
+                        class Vector {
+                            float * data;
+                            int size;
+                        public:
+                            Vector operator+(Vector const & that) const;
+                        };
+                    \end{minted}
+                \end{onlyenv}
+            \end{column}
+            \begin{column}{0.5\textwidth}
+                \begin{onlyenv}<2->
+                    \begin{minted}[]{c++}
+                        Vector a;
+                        Vector b;
+                        Vector c = a|\temporal<3>{.add}{\errc{.add}}{\hlc{ + }}|(b);
+                    \end{minted}
+                \end{onlyenv}
+        \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}{Несколько мелких деталей}
+        \begin{itemize}
+            \item \code{const}
+            \item \code{&}
+            \item copy-constructor
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const}
+        \begin{itemize}
+            \item Защищает значение от изменений
+                \pause
+                \begin{minted}{c++}
+                    const int x = 42;
+                    x = 37; // ошибка компиляции
+                \end{minted}
+            \pause
+            \item Одно и то же:
+                \begin{minted}{c++}
+                    const int x;
+                    int const x;
+                \end{minted}
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Ключевое слово const на указателях}
+        \begin{tabular}{l l}
+            \code{int *}             & --- указатель на \code{int} \\
+            \code{int const *}       & --- указатель на неизменяемый \code{int} \\
+            \code{const int *}       &\\
+            \code{int * const}       & --- неизменяемый указатель на \code{int} \\
+            \code{const int * const} & --- неизменяемый указатель на неизменяемый \code{int} \\
+        \end{tabular}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const на указателях}
+        \begin{block}{Указатель на неизменяемый int}
+            \begin{center}
+                \begin{tikzpicture}
+                    \node at (0, 0) {\code[fontsize=\Huge]{int const * p;}};
+                    \draw [decorate,decoration={brace,amplitude=12pt},xshift=0pt,yshift=-4pt] (2.9, 0.7) -- (3.8, 0.7)
+                        node [align=center,black,midway,yshift=0.8cm] {указатель};
+                    \draw [decorate,decoration={brace,amplitude=12pt,mirror,raise=7pt},xshift=0pt,yshift=-4pt] (-4.2, -0.1) -- (1.2, -0.1)
+                        node [align=center,black,midway,yshift=-1.5cm] {тип значения\\ на которое указывает};
+                \end{tikzpicture}
+            \end{center}
+        \end{block}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const на указателях}
+        \begin{block}{Неизменяемый указатель на int}
+            \begin{center}
+                \begin{tikzpicture}
+                    \node at (0, 0) {\code[fontsize=\Huge]{int * const p;}};
+                    \draw [decorate,decoration={brace,amplitude=12pt},xshift=0pt,yshift=-4pt] (-0.5, 0.7) -- (3.8, 0.7)
+                        node [align=center,black,midway,yshift=0.8cm] {указатель};
+                    \draw [decorate,decoration={brace,amplitude=12pt,mirror,raise=7pt},xshift=0pt,yshift=-4pt] (-4.2, -0.1) -- (-2.5, -0.1)
+                        node [align=center,black,midway,yshift=-1.5cm] {тип значения\\ на которое указывает};
+                \end{tikzpicture}
+            \end{center}
+        \end{block}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const на указателях}
+
+        \code{int x, y;}
+        \newline
+        \newline
+        \small
+        \begin{tabular}{| r | c | c |}
+            \hline
+                & \makecell{\code{p = &y;} \\ (изменение указателя)} & \makecell{\code{*p = 37;} \\ (изменение значения)} \\
+            \hline
+            \code{int * p = &x}             & \yes & \yes \\
+            \hline
+            \code{int const * p = &x}       & \yes & \no \\
+            \hline
+            \code{int * const p = &x}       & \no & \yes \\
+            \hline
+            \code{int const * const p = &x} & \no & \no \\
+            \hline
+        \end{tabular}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const на указателях}
+        \begin{onlyenv}<1>
+            \begin{itemize}
+                \item Если переменная неизменяемая, то её адрес может быть записан только в указатель на неизменяемую сущность
+                \item Иначе неизменяемость переменной элементарно нарушить --- присвоить адрес в обычный указатель и изменить
+            \end{itemize}
+        \end{onlyenv}
+        \begin{onlyenv}<2->
+            \begin{minted}{c++}
+                int const x = 42;
+                int * p;
+            \end{minted}
+            ~
+            \begin{onlyenv}<3>
+                \begin{minted}{c++}
+                    p = &x;
+                    *p = 37; // ???
+                \end{minted}
+            \end{onlyenv}
+            \begin{onlyenv}<4>
+                \begin{minted}{c++}
+                    p |\errc{=}| &x; // ошибка компиляции
+                    *p = 37;
+                \end{minted}
+            \end{onlyenv}
+        \end{onlyenv}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const на указателях}
+        \begin{center}
+            \begin{tabular}{| r | c | c |}
+                \hline
+                    & \code{int x} & \code{int const x} \\
+                \hline
+                \code{int * p = &x;}       & \yes & \no \\
+                \hline
+                \code{int const * p = &x;} & \yes & \yes \\
+                \hline
+            \end{tabular}
+        \end{center}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const на указателях}
+        \begin{itemize}
+            \item Частный случай --- передача адреса в функцию
+            \item Адрес неизменяемой переменной можно передать только в функцию, принимающую указатель на неизменяемую сущность
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const на указателях}
+        \begin{center}
+            \begin{tabular}{| r | c | c |}
+                \multicolumn{3}{l}{\code{foo(&x)}} \\
+                \hline
+                & \code{int x} & \code{int const x} \\
+                \hline
+                \code{void foo(int * p)}       & \yes & \no \\
+                \hline
+                \code{void foo(int const * p)} & \yes & \yes \\
+                \hline
+            \end{tabular}
+        \end{center}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const на указателях}
+        \begin{center}
+            \begin{tabular}{| r | c | c |}
+                \multicolumn{3}{l}{\code{foo(x)}} \\
+                \hline
+                & \code{int x} & \code{int const x} \\
+                \hline
+                \code{void foo(int y)}       & \yes & \yes \\
+                \hline
+                \code{void foo(int const y)} & \yes & \yes \\
+                \hline
+            \end{tabular}
+        \end{center}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const}
+        \begin{itemize}
+            \item<+->
+                \begin{minted}[xleftmargin=0cm]{c++}
+                    void foo(int p) { /* ... */ }
+
+                    const int x;
+                    foo(x);
+                \end{minted}
+
+            \item<+-> \code{p} --- копия \code{x} \\
+                \code{const} оригинала и \code{const} копии никак не связаны
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const}
+        \begin{columns}[T]
+            \begin{column}{0.4\textwidth}
+                \begin{minted}{c++}
+                    class Foo {
+                    public:
+                       int field;
+                    };
+                \end{minted}
+            \end{column}
+            \begin{column}{0.6\textwidth}
+                \begin{minted}{c++}
+                    const Foo |\errco<3->{f}|;
+                    f.field |\errco<2->{=}| 37;
+                \end{minted}
+                ~\\
+                \begin{onlyenv}<4>
+                    \footnotesize
+                    поле field нельзя будет потом изменить значит, оно должно быть проинициализировано сразу,
+                    но конструктор по умолчанию этого не делает
+                \end{onlyenv}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const}
+        \begin{columns}[T]
+            \begin{column}{0.5\textwidth}
+                \begin{minted}{c++}
+                    class Foo {
+                    public:
+                        int field;
+
+                        Foo() {
+                            this->field = 37;
+                        }
+                    };
+                \end{minted}
+            \end{column}
+            \begin{column}{0.5\textwidth}
+                \begin{minted}{c++}
+                    const Foo f;
+                \end{minted}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ключевое слово const}
+        \begin{columns}[T]
+            \begin{column}{0.5\textwidth}
+                \begin{minted}{c++}
+                    class Foo {
+                    public:
+                        int field;
+                        Foo() { ... }
+
+                        void print(|\temporal<3->{}{\blockcom{Foo \only<7>{const }* this}}{}|) |\temporal<6->{}{\hlc{const} }{}|{
+                            std::cout << this->field;
+                            |\temporal<5,8>{}{\errco<8>{\keyword{this}->field = 42;}}{}|
+                        }
+                    };
+                \end{minted}
+            \end{column}
+            \begin{column}{0.5\textwidth}
+                \begin{minted}{c++}
+                    const Foo f;
+
+                    |\errco<2-5>{\hlco<6->{f.print();}}|
+                \end{minted}
+                ~\\ ~\\
+                \only<-5>{~\\}
+                \footnotesize
+                \begin{itemize}
+                    \item<4-5> метод \code[fontsize=\footnotesize]{bar} может нарушить свойство \code[fontsize=\footnotesize]{const} объекта \code[fontsize=\footnotesize]{f}
+                    \item<6-> метод \code[fontsize=\footnotesize]{bar} утверждает, что не может нарушить свойство \code[fontsize=\footnotesize]{const} объекта \code[fontsize=\footnotesize]{f}
+                    \item<8-> попытка нарушить это утверждение --- ошибка компиляции
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}[fragile]{const на полях}
+        \begin{columns}[T]
+            \begin{column}{0.5\textwidth}
+                \begin{minted}{c++}
+                    class Foo {
+                    public:
+                        const int field|\temporal<7>{}{\hlc{ = 42}}{}|;
+                \end{minted}
+                \begin{onlyenv}<4->
+                    \begin{minted}[autogobble=false]{c++}
+    Foo() |\temporal<6>{}{\hlc{: field(42)} }{}|{
+        |\temporal<-5>{}{\errco<5>{\keyword{this}->field = 42;}}{}|
+    }
+                    \end{minted}
+                \end{onlyenv}
+                \begin{minted}{c++}
+                    };
+                \end{minted}
+            \end{column}
+            \begin{column}{0.5\textwidth}
+                \begin{minted}{c++}
+                    |\hlco<4->{\errco<2-3>{Foo f;}}|
+                \end{minted}
+                \footnotesize
+                \begin{itemize}
+                    \item<2-5> поле \code[fontsize=\footnotesize]{field} объекта \code[fontsize=\footnotesize]{f} не проинициализировано
+                    \item<3-5> \textbf{и его уже негде инициализировать!}
+                    \item<6-> \temporal<7>{список инициализации спасает}{так тоже можно}{}
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}{Ключевое слово const}
+        \begin{block}{14 слайдов об одном ключевом слове}
+            Но суть проста:
+            \begin{itemize}
+                \item Константы должны быть инициализированы один раз в жизни, и до любого использования
+                \item На константу может указывать только указатель на константу
+            \end{itemize}
+        \end{block}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ссылки}
+        \begin{itemize}
+            \item<2-> Это указатели
+            \item<3-> почти
+                \begin{enumerate}
+                    \item<4-> Не изменяются (неявный \code{const})
+                    \item<4-> Чтение/запись --- с неявным разыменованием
+                    \item<4-> Не конвертируются в числа и обратно
+                    \item<4-> Нет арифметики ссылок, нет \code{NULL} (без хаков)
+                \end{enumerate}
+            \item<5-> У ссылок нет значений в обычном понимании этого слова, т.к. синтаксис языка не позволяет эти значения никаким образом получить
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Ссылки}
+        \begin{columns}[T]
+            \begin{column}{0.4\textwidth}
+                \begin{minted}[xleftmargin=1cm]{c++}
+                    int x, y;
+                    int * ptr = &x;
+
+                    *ptr = 42;
+                    y = *ptr;
+
+                    ptr = &y;
+                \end{minted}
+            \end{column}
+            \begin{column}{0.6\textwidth}
+                \begin{onlyenv}<2->
+                    \begin{minted}{c++}
+                        int x, y;
+                        int & ref =|\hlco<3>{ }|x; // инициализация ссылки
+
+                       |\temporal<4->{}{\hlco<4>{ }r = \codenum{42}; \linecom{запись по ссылке}}{}|
+                        |\temporal<4->{}{y =\hlco<4>{ }r; \linecom{чтение по ссылке}}{}|
+
+                        |\temporal<5->{}{r = y; \linecom{запись по ссылке}}{}|
+                              |\temporal<6->{}{\linecom{меняет x}}{}|
+                    \end{minted}
+                \end{onlyenv}
+                \begin{itemize}
+                    \item<3-> неявное взятие адреса \code[fontsize=\footnotesize]{x}
+                    \item<4-> неявная операция разыменования
+                    \item<5-> и отключить её нельзя
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}[fragile]{Передача аргумента по ссылке}
+        \begin{columns}[T]
+            \begin{column}{0.4\textwidth}
+                \begin{onlyenv}<1-3>
+                    \begin{minted}{c++}
+                        void foo(int & r) {
+                            std::cout << r;
+                        }
+
+                        int x = 42;
+                        foo(x); // выведется 42
+
+                        |\temporal<2->{}{\errc{foo(5);}}{}|
+                        |\temporal<3->{}{\linecom{фактически попытка взять адрес числа 5}}{}|
+                    \end{minted}
+                \end{onlyenv}
+                \begin{onlyenv}<4->
+                    \begin{minted}{c++}
+                        void foo(int & r) {
+                            r = 42;
+                        }
+
+                        int x = 42;
+                        foo(x);
+                        assert(x == 37);
+                    \end{minted}
+                \end{onlyenv}
+            \end{column}
+            \begin{column}{0.6\textwidth}
+                \begin{itemize}
+                    \item<4-> передача по ссылке подобна передаче по указателю языка С
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}[fragile]{Передача аргумента по ссылке}
+        \begin{columns}[T]
+            \begin{column}{0.4\textwidth}
+                \begin{minted}{c++}
+                    class Foo {
+                    public:
+                        int x;
+                    };
+
+                    void bar(Foo |\temporal<3->{}{\hlc{\keyword{const}} }{}|& f) {
+                        f.x = 37;
+                    }
+                \end{minted}
+            \end{column}
+            \begin{column}{0.6\textwidth}
+                \begin{onlyenv}<1>
+                    \begin{minted}{c++}
+                        Foo obj;
+
+                        obj.x = 42;
+                        bar(obj);
+                        assert(obj.x == 37);
+                    \end{minted}
+                \end{onlyenv}
+                \begin{onlyenv}<2->
+                    \begin{minted}{c++}
+                        const Foo obj;
+
+                        |\hlco<3->{\errco<2>{bar(obj);}}|
+                    \end{minted}
+                \end{onlyenv}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}[fragile]{Передача по ссылке --- неявная семантика}
+        \begin{block}{Язык С}
+            \begin{minted}{c++}
+                int x = 1, y = 2, z = 3;
+                foo(x, y, &z);
+                // x - 1, y - 2, z - ???
+            \end{minted}
+        \end{block}
+
+        \begin{block}{Язык С++}
+            \begin{minted}{c++}
+                int x = 1, y = 2, z = 3;
+                foo(x, y, &z);
+                // x - ???, y - ???, z - ???
+            \end{minted}
+        \end{block}
+    \end{frame}
+
+    \begin{frame}{Передача по ссылке}
+        \begin{itemize}
+            \item Для экономии действий (копируется адрес объекта, а не значение)
+            \item Для изменения переданных параметров
+            \item Изменяемость параметра контролируется спецификатором \code{const}
+            \item В отличие от C, нельзя по виду вызова судить о неизменяемости переданных переменных, нужно смотреть описание метода
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Конструктор копирования}
+        \begin{columns}[T]
+            \begin{column}{0.6\textwidth}
+                \begin{onlyenv}<1-2>
+                    \begin{minted}[xleftmargin=0cm]{c++}
+                        class Vector {
+                            int size;
+                            double * data;
+                        public:
+                            Vector(int size)
+                                : size(size)
+                                , data(new double[size]) {}
+
+                            ~Vector() {
+                                delete[] this->data;
+                            }
+                        };
+                    \end{minted}
+                \end{onlyenv}
+                \begin{onlyenv}<3->
+                    \begin{tikzpicture}[ scale=0.8 ]
+                        \node[above] at (0, 0) {a:};
+                        \filldraw[membox] (0, 0) rectangle (3, -1) node[memnode] {data $\rightarrow$ };
+                        \filldraw[membox] (0, -1) rectangle (3, -2) node[memnode] {size = 6};
+
+                        \only<4->{
+                            \filldraw[membox] (6, -1) rectangle (7, -2) node[memnode] {};
+                            \filldraw[membox] (7, -1) rectangle (8, -2) node[memnode] {};
+                            \filldraw[membox] (8, -1) rectangle (9, -2) node[memnode] {};
+                            \filldraw[membox] (9, -1) rectangle (10, -2) node[memnode] {};
+                            \filldraw[membox] (10, -1) rectangle (11, -2) node[memnode] {};
+                            \filldraw[membox] (11, -1) rectangle (12, -2) node[memnode] {};
+                            \draw [->,color=maincolor, thick] (3, -0.5) to[out=0, in=180] (6, -1.5);
+                        }
+
+                        \only<5->{
+                            \node[above] at (0, -3) {b:};
+                            \filldraw[membox] (0, -3) rectangle (3, -4) node[memnode] (dataB) {data $\rightarrow$ };
+                            \filldraw[membox] (0, -4) rectangle (3, -5) node[memnode] {size = 6};
+                            \draw [->,color=maincolor, thick] (3, -3.5) to[out=0, in=180] (6, -1.5);
+                        }
+
+                        \only<7->{
+                            \draw [haired, thick] (0, -3) -- (3, -5);
+                            \draw [haired, thick] (0, -5) -- (3, -3);
+
+                            \draw [haired, thick] (6, -1) -- (12, -2);
+                            \draw [haired, thick] (6, -2) -- (12, -1);
+                        }
+                    \end{tikzpicture}
+                \end{onlyenv}
+            \end{column}
+            \begin{column}{0.4\textwidth}
+                \begin{minted}[xleftmargin=1cm]{c++}
+                    void foo(Vector b) {
+                        /* ... */
+                    }|\temporal<6->{}{ \linecom{b.~Vector()}}{}|
+
+                    Vector a(6);
+                    foo(a);
+                \end{minted}
+                \footnotesize
+                \begin{itemize}
+                    \item<2-> \code{b} --- копия \code{a}
+                    \item<2-> копирование объектов, как и в языке Си, по умолчанию --- побайтовое, без углубления по адресам
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+
+    \begin{frame}{Конструктор копирования по умолчанию}
+        \begin{itemize}
+            \item Побайтово, без углубления по адресам
+            \item Подходит для простых ``однослойных'' структур, не владеющих памятью, на которую указывают
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Конструктор копирования по умолчанию}
+        Эти типы данных не владеют никакой памятью
+        \begin{columns}[T]
+            \begin{column}{0.4\textwidth}
+                \begin{minted}[]{c++}
+                    class Point {
+                        double x;
+                        double y;
+                        double z;
+                    public:
+                        /* ... */
+                    };
+                \end{minted}
+            \end{column}
+            \begin{column}{0.6\textwidth}
+                \begin{minted}[]{c++}
+                    class LineSegment {
+                        Point * a;
+                        Point * b;
+                    public:
+                        LineSegment(Point * a, Point * b) {
+                            this->a = a;
+                            this->b = b;
+                        }
+                    };
+                \end{minted}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}[fragile]{Конструктор копирования по умолчанию}
+        Для более сложных типов нужно определять свой способ копирования
+        \begin{minted}[]{c++}
+            class Vector {
+            public:
+                Vector(Vector const & that)
+                    : size(that.size)
+                    , data(new double[that.size])
+                {
+                    for (int i = 0; i < this->size; ++i) {
+                        this->data[i] = that.data[i];
+                    }
+                }
+            };
+        \end{minted}
+    \end{frame}
+
+    \begin{frame}[fragile]{Конструктор копирования}
+        \begin{block}{\normalsize Вызывается в трёх случаях:}
+            \footnotesize
+            \begin{itemize}
+                \item<2-> Создание нового объекта (явно)
+                    \begin{minted}[fontsize=\footnotesize]{c++}
+                        Vector b(a);
+                        Vector c = a;
+                    \end{minted}
+                \item<3-> Передача объекта в функцию по значению
+                    \begin{minted}[fontsize=\footnotesize]{c++}
+                        void foo(Vector v) { /* ... */ }
+                        foo(a);
+                    \end{minted}
+                \item<4-> Возврат объекта из функции по значению
+                    \begin{minted}[fontsize=\footnotesize]{c++}
+                        Vector bar() {
+                            Vector v(8);
+                            /* ... */
+                            return v;
+                        }
+                    \end{minted}
+            \end{itemize}
+        \end{block}
+    \end{frame}
+
+    \begin{frame}[fragile]{Конструктор копирования}
+        \begin{tikzpicture}[ scale=0.8 ]
+            \node[above] at (0, 0) {a:};
+            \filldraw[membox] (0, 0) rectangle (3, -1) node[memnode] {data $\rightarrow$ };
+            \filldraw[membox] (0, -1) rectangle (3, -2) node[memnode] {size = 6};
+
+            \only<2->{
+                \filldraw[membox] (6, -1) rectangle (7, -2) node[memnode] {};
+                \filldraw[membox] (7, -1) rectangle (8, -2) node[memnode] {};
+                \filldraw[membox] (8, -1) rectangle (9, -2) node[memnode] {};
+                \filldraw[membox] (9, -1) rectangle (10, -2) node[memnode] {};
+                \filldraw[membox] (10, -1) rectangle (11, -2) node[memnode] {};
+                \filldraw[membox] (11, -1) rectangle (12, -2) node[memnode] {};
+                \draw [->,color=maincolor, thick] (3, -0.5) to[out=0, in=180] (6, -1.5);
+            }
+
+            \only<3->{
+                \node[above] at (0, -3) {b:};
+                \filldraw[membox] (0, -3) rectangle (3, -4) node[memnode] (dataB) {data $\rightarrow$ };
+                \filldraw[membox] (0, -4) rectangle (3, -5) node[memnode] {size = 6};
+            }
+
+            \only<4->{
+                \filldraw[membox] (6, -3) rectangle (7, -4) node[memnode] {};
+                \filldraw[membox] (7, -3) rectangle (8, -4) node[memnode] {};
+                \filldraw[membox] (8, -3) rectangle (9, -4) node[memnode] {};
+                \filldraw[membox] (9, -3) rectangle (10, -4) node[memnode] {};
+                \filldraw[membox] (10, -3) rectangle (11, -4) node[memnode] {};
+                \filldraw[membox] (11, -3) rectangle (12, -4) node[memnode] {};
+                \draw [->,color=maincolor, thick] (3, -3.5) to[out=0, in=180] (6, -3.5);
+            }
+
+            \only<5->{
+                \draw [->,color=gray, thick] (6.5, -2) to[out=-90, in=90] (6.5, -3);
+                \draw [->,color=gray, thick] (7.5, -2) to[out=-90, in=90] (7.5, -3);
+                \draw [->,color=gray, thick] (8.5, -2) to[out=-90, in=90] (8.5, -3);
+                \draw [->,color=gray, thick] (9.5, -2) to[out=-90, in=90] (9.5, -3);
+                \draw [->,color=gray, thick] (10.5, -2) to[out=-90, in=90] (10.5, -3);
+                \draw [->,color=gray, thick] (11.5, -2) to[out=-90, in=90] (11.5, -3);
+            }
+
+            \only<6->{
+                \draw [haired, thick] (0, -3) -- (3, -5);
+                \draw [haired, thick] (0, -5) -- (3, -3);
+
+                \draw [haired, thick] (6, -3) -- (12, -4);
+                \draw [haired, thick] (6, -4) -- (12, -3);
+            }
+        \end{tikzpicture}
+    \end{frame}
+
+    \begin{frame}[fragile]{Конструктор копирования}
+        \begin{columns}[T]
+            \begin{column}{0.6\textwidth}
+                \begin{minted}[]{c++}
+                    class Vector {
+                    public:
+                        Vector(Vector |\hlco<3>{const}| |\hlco<2>{&}| that)
+                            : size(that.size)
+                            , data(new double[that.size])
+                        {
+                            for (int i = 0; i < size; ++i) {
+                                data[i] = that.data[i];
+                            }
+                        }
+                    };
+                \end{minted}
+            \end{column}
+            \begin{column}{0.4\textwidth}
+                \footnotesize
+                \begin{itemize}
+                    \item<2-> Конструктор копирования должен принимать свой параметр по ссылке.
+                    \item<3-> \code[fontsize=\footnotesize]{const} можно не указывать,
+                        но это неприятно ограничивает область применения, так что смысла нет.
+                        Исключение --- классы, копирование которых невозможно без модификации оригинала.
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \fullscreenlabel{\huge О чём это мы?}
+
+    \begin{frame}[fragile]{Перегрузка операторов}
+        \begin{columns}[T]
+            \begin{onlyenv}<2->
+                \begin{column}{0.6\textwidth}
+                    \begin{minted}[fontsize=\footnotesize, xleftmargin=0cm]{c++}
+                        class Vector {
+                            double * data;
+                            int size;
+                        public:
+                           |\hlco<9>{Vector(Vector \keyword{const} \hlco<3>{&} that);}|
+
+                           Vector|\only<10,11>{ \errco<11>{\hlco<10>{&}}}| operator+ (Vector |\hlco<5,6>{\keyword{const}}| |\hlco<4>{&}| that) |\hlco<7,8>{\keyword{const}}| {
+                               Vector result(this->size);
+                               for (int i = 0; i < this->size; i++) {
+                                   result.data[i] =
+                                           this->data[i] + that.data[i];
+                               }
+                               return result;|\only<9->{ \linecom{\souto<10->{return Vector(result)}}}|
+                           }|\only<9->{ \linecom{\errco<11->{result.~Vector()}}}|
+                        };
+                    \end{minted}
+                \end{column}
+            \end{onlyenv}
+            \begin{column}{0.4\textwidth}
+                \begin{onlyenv}<1->
+                    \begin{minted}[]{c++}
+                        |\only<8>{\hlc{\keyword{const}} }|Vector a;
+                        |\only<6>{\hlc{\keyword{const}} }|Vector b;
+                        Vector c = a |\hlco<1>{+}| b;
+                    \end{minted}
+                \end{onlyenv}
+                ~\\
+                \footnotesize
+                \begin{itemize}
+                    \item<3->
+                        \only<3>{Для корректности --- иначе для вызова конструктора копий придётся вызывать конструктор копий.}
+                        \only<4>{Для эффективности --- чтобы не вызывать конструктор копий лишний раз.}
+                        \only<5-8>{Для расширения области применения;}
+%
+                        \only<9>{Для корректного возврата по значению;}
+                        \only<10>{можно ли возвращать по ссылке и сэкономить на вызове конструктора копий?}
+                        \only<11>{нельзя, ведь ссылка будет возвращена на объект, который удалится после выхода из функции. \\~\\
+                            Также, как и нельзя возвращать адрес локальной переменной.}
+                    \item<5-8> Для надёжности;
+                    \item<6,8>
+                        \alt<6>{\code[fontsize=\footnotesize]{b}}{\code[fontsize=\footnotesize]{a}} может быть константным
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{frame}
+
+    \begin{frame}[fragile]{Что можно ещё перегрузить?}
+        \begin{itemize}
+            \item Все операторы, определённые в C++
+            \item кроме \code{::} \code{.} \code{.*} \code{? :} \code{sizeof} \code{typeid}
+            \item При перегрузке \code{&&} и \code[escapeinside=]{||} теряется свойство ленивости
+        \end{itemize}
+    \end{frame}
+
+%    \begin{frame}[fragile]{Перегрузка оператора []}
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%    };
+%
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{Перегрузка оператора []}
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           Vector result(this->size);
+%           for (int i = 0; i < this->size; i++) {
+%               result.data[i] =
+%                       this->data[i] + that.data[i];
+%           }
+%           return result;
+%       }
+%    };
+%
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{Перегрузка оператора []}
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           Vector result(this->size);
+%           for (int i = 0; i < this->size; i++) {
+%               result.data[i] =
+%                       this->data[i] + that[i];
+%           }
+%           return result;
+%       }
+%    };
+%
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{Перегрузка оператора []}
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           Vector result(this->size);
+%           for (int i = 0; i < this->size; i++) {
+%               result.data[i] =
+%                       this[i] + that[i];
+%           }
+%           return result;
+%       }
+%    };
+%
+%    106
+%    а так можно?
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           Vector result(this->size);
+%           for (int i = 0; i < this->size; i++) {
+%               result.data[i] =
+%                       this[i] + that[i];
+%           }
+%           return result;
+%       }
+%    };
+%
+%    107
+%    Vector* this;
+%
+%    this[i] ~ *(this+i)
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           Vector result(this->size);
+%           for (int i = 0; i < this->size; i++) {
+%               result.data[i] =
+%                       this[i] + that[i];
+%           }
+%           return result;
+%       }
+%    };
+%
+%    108
+%    синтаксис указателей не совместим с синтаксисом перегрузки операторов
+%
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           Vector result(this->size);
+%           for (int i = 0; i < this->size; i++) {
+%               result[i] =
+%                       this->data[i] + that[i];
+%           }
+%           return result;
+%       }
+%    };
+%
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{Перегрузка оператора []}
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           Vector result(this->size);
+%           for (int i = 0; i < this->size; i++) {
+%               result[i] =
+%                       this->data[i] + that[i];
+%           }
+%           return result;
+%       }
+%    };
+%
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{lvalue и rvalue}
+%
+%    lvalue - что-то, у чего есть определённый адрес
+%        переменная (в том числе неизменяемая), ссылка, указатель с разыменованием
+%
+%    rvalue - всё остальное
+%        литерал, результат выражения и т.п., не являющееся lvalue
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{lvalue и rvalue}
+%
+%    В левой части оператора присваивания может стоять только lvalue
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{Перегрузка оператора []}
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           Vector result(this->size);
+%           for (int i = 0; i < this->size; i++) {
+%               result[i] =
+%                       this->data[i] + that[i];
+%           }
+%           return result;
+%       }
+%    };
+%
+%    113
+%    operator[] возвращает значение, то есть rvalue
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%       float& operator[] (int index) {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    114
+%    а вот такой оператор уже возвращает lvalue, по которому можно изменить элемент массива
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%       float& operator[] (int index) {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{Перегрузка оператора []}
+%    class Vector {
+%
+%
+%
+%
+%       float& operator[] (int index) {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{Перегрузка оператора []}
+%    class Vector {
+%
+%
+%
+%
+%       float& operator[] (int index) {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    \end{frame}
+%
+%    \begin{frame}[fragile]{Перегрузка оператора []}
+%    class Vector {
+%
+%
+%
+%
+%       float& operator[] (int index) {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    118
+%    это метод объявлен не как const,
+%    a this и that - указывают и ссылаются, как константы
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%
+%
+%
+%       float& operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    119
+%    так делать нехорошо
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%
+%
+%
+%       float& operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    120
+%    так делать нехорошо
+%
+%    вы создаёте метод, который можно звать от константных объектов, через который можно их изменять
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%
+%
+%
+%       float& operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    121
+%    так делать нехорошо
+%
+%    вы создаёте метод, который можно звать от константных объектов, через который можно их изменять
+%
+%    помните, что C++ не даёт вам никакой безопасности?
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%
+%
+%
+%       float& operator[] (int index) const {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    122
+%    так делать нехорошо
+%
+%    вы создаёте метод, который можно звать от константных объектов, через который можно их изменять
+%
+%    помните, что C++ не даёт вам никакой безопасности?
+%
+%    не надо помогать ему лишний раз
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%       float& operator[] (int index) {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    123
+%    первый оператор нельзя использовать, как lvalue
+%
+%    второй оператор нельзя вызывать от константных объектов
+%
+%    в совокупности они оба создают корректную семантику чтения-записи
+%
+%
+%    Перегрузка оператора []
+%    class Vector {
+%
+%       float operator[] (int index) const {
+%           return this->data[index];
+%       }
+%       float& operator[] (int index) {
+%           return this->data[index];
+%       }
+%
+%       Vector operator+ (const Vector& that) const {
+%           ...
+%           result[i] = (*this)[i] + that[i];
+%           ...
+%       }
+%    };
+%
+%    124
+%    первый оператор нельзя использовать, как lvalue
+%
+%    второй оператор нельзя вызывать от константных объектов
+%
+%    в совокупности они оба создают корректную семантику чтения-записи
+%
+%    и компилятор сам разберётся, кого где вызывать
+
+    \begin{frame}{Оператор присваивания}
+        \begin{itemize}
+            \item В отличии от конструктора копий работает с уже созданным объектом
+            \item Должен сначала счистить старое состояние\only<2>{ (деструктор)}
+            \item Потом скопировать оригинал\only<2>{ (конструктор копий)}
+        \end{itemize}
+    \end{frame}
+
+
+    \begin{frame}[fragile]{Оператор присваивания}
+        \begin{minted}[fontsize=\footnotesize]{c++}
+            class Vector {
+            private:
+                void rawClean() { delete[] this->data; }
+                void rawCopy(Vector const & that) {
+                    this->size = that->size; this->data = new ...
+                }
+
+            public:
+                Vector(Vector const & that) { this->rawCopy(that); }
+                ~Vector() { this->rawClean(); }
+                Vector & operator= (Vector const & that) {
+                    if (this != &that) {
+                        this->rawClean(); this->rawCopy(that);
+                    }
+                    return *this;
+                }
+            };
+        \end{minted}
+    \end{frame}
+
+    \begin{frame}[fragile]{Оператор присваивания по умолчанию}
+        \begin{itemize}
+            \item Побайтовый, без углубления по адресам
+            \item Не подходит для сложных структур с дополнительной памятью
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Правило трёх}
+        Если в классе есть один из:
+        \begin{itemize}
+            \item Деструктор
+            \item Конструктор копирования
+            \item Оператор присваивания
+        \end{itemize}
+
+        То в нём \alt<2>{\colorbox{haigreen}{должны}}{должны} быть оставшиеся два
+    \end{frame}
+
+%    \begin{frame}[fragile]{Оператор присваивания}
+%    class Vector {
+%       Vector& operator= (const Vector& that) {
+%           if (this != &that) {
+%               this->rawClean();
+%               this->rawCopy(that);
+%           }
+%           return *this;
+%       }
+%    };
+%
+%    130
+%    Vector a(...);
+%    Vector b(...);
+%    a = b;
+%
+%
+%    Оператор присваивания
+%    class Vector {
+%       Vector& operator= (const Vector& that) {
+%           if (this != &that) {
+%               this->rawClean();
+%               this->rawCopy(that);
+%           }
+%           return *this;
+%       }
+%    };
+%
+%    131
+%    Vector a(...);
+%    Vector b(...);
+%    a = b;
+%
+%    для эффективности
+%
+%    чтобы не вызывать конструктор копий для b
+%
+%    Оператор присваивания
+%    class Vector {
+%       Vector& operator= (const Vector& that) {
+%           if (this != &that) {
+%               this->rawClean();
+%               this->rawCopy(that);
+%           }
+%           return *this;
+%       }
+%    };
+%
+%    132
+%    Vector a(...);
+%    const Vector b(...);
+%    a = b;
+%
+%    для расширения области применения
+%
+%    b может быть константным
+%
+%    Оператор присваивания
+%    class Vector {
+%       Vector& operator= (const Vector& that) {
+%           if (this != &that) {
+%               this->rawClean();
+%               this->rawCopy(that);
+%           }
+%           return *this;
+%       }
+%    };
+%
+%    133
+%    Vector a(...);
+%    Vector b(...);
+%    a = b;
+%
+%    для защиты от самокопирования
+%
+%
+%    Оператор присваивания
+%    class Vector {
+%       Vector& operator= (const Vector& that) {
+%           if (this != &that) {
+%               this->rawClean();
+%               this->rawCopy(that);
+%           }
+%           return *this;
+%       }
+%    };
+%
+%    134
+%    Vector a(...);
+%    Vector& b = a;
+%    a = b;
+%
+%    для защиты от самокопирования
+%
+%
+%    Оператор присваивания
+%    class Vector {
+%       Vector& operator= (const Vector& that) {
+%           if (this != &that) {
+%               this->rawClean();
+%               this->rawCopy(that);
+%           }
+%           return *this;
+%       }
+%    };
+%
+%    135
+%    Vector a(...);
+%    Vector b(...);
+%    a = b;
+%
+%    можем возвращать по ссылке, так как объект this не локальный
+%
+%    он не умирает при выходе из метода
+
+
+    \begin{frame}[fragile]{Не путать}
+        \begin{minted}{c++}
+            Vector a(8);
+            Vector b = a;  // конструктор копий
+            Vector c(6);
+            c = a;         // оператор присваивания
+        \end{minted}
+    \end{frame}
+
+
+    \begin{frame}[fragile]{Перегрузка операторов}
+            \begin{minted}{c++}
+                class Vector {
+                    Vector & operator+= (Vector const & that) {
+                        *this = *this + that;
+                        return *this;
+                    }
+                };
+            \end{minted}
+            \vfill
+            \footnotesize
+            \begin{itemize}
+                \item упражнение \#1 --- определить назначение всех символов в этом тексте
+                \item упражнение \#2 --- определить всю возникающую при исполнении неявную семантику: временные объекты, конструкторы копий, деструкторы
+            \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Подводные камни}
+        \begin{itemize}
+            \item Эффективность (из-за неявной семантики и возврата по значениям)
+            \item Запутанность (из-за придания операторам неочевидных свойств)
+                \begin{itemize}
+                    \item Например, побочные эффекты в операции сложения векторов
+                    \item Или оператор \code{!}, вычисляющий жорданову форму матрицы
+                    \item Или оператор \code{-}, складывающий вектора
+                \end{itemize}
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Убедитесь, что вынесли с этой лекции}
+        \begin{itemize}
+            \item DSL/EDSL
+            \item Ключевое слово \code{const}
+            \item Ссылки
+            \item Конструктор копирования
+            \item Перегрузка операторов
+            %\item lvalue / rvalue TODO
+            \item Правило трёх
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Проверочные вопросы}
+        \begin{itemize}
+            \item Чем отличаются ссылки от указателей?
+            \item В каких случаях вызывается конструктор копирования?
+            \item Какие минусы у оператора присваивания по умолчанию?
+            \item Почему конструктор копирования принимает аргумент по ссылке?
+            \item Можно ли в конструктор копирования передать константный объект?
+        \end{itemize}
+    \end{frame}
+
+    \qnaframe
+
+\end{document}
